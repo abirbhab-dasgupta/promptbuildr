@@ -1,0 +1,187 @@
+"use client";
+
+import { useState } from "react";
+import { Copy, Check, Save, RotateCcw } from "lucide-react";
+import { usePromptStore } from "@/store/usePromptStore";
+import { useHistory } from "@/hooks/useHistory";
+import ExplainBlock from "./ExplainBlock";
+
+export default function PromptOutput() {
+    const { response, isLoading, error, mode, model, tone, idea, setResponse } =
+        usePromptStore();
+    const { save } = useHistory();
+    const [copied, setCopied] = useState(false);
+    const [saved, setSaved] = useState(false);
+
+    async function handleCopy() {
+        if (!response?.prompt) return;
+        try {
+            await navigator.clipboard.writeText(response.prompt);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch {
+            console.error("Copy failed");
+        }
+    }
+
+    function handleSave() {
+        if (!response) return;
+        save({ idea, mode, model, tone, response });
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
+    }
+
+    function handleReset() {
+        setResponse(null);
+    }
+
+    // ── LOADING STATE ───────────────────────────────────────
+    if (isLoading) {
+        return (
+            <div className="flex flex-col items-center justify-center h-full min-h-[400px] gap-4 p-8">
+                <div className="loader-track w-full">
+                    <div className="loader-bar" />
+                </div>
+                <span className="font-mono-custom text-[11px] uppercase tracking-[2px] text-brown-mid animate-pulse">
+                    Forging your prompt...
+                </span>
+            </div>
+        );
+    }
+
+    // ── ERROR STATE ─────────────────────────────────────────
+    if (error) {
+        return (
+            <div className="flex flex-col items-center justify-center h-full min-h-[400px] gap-4 p-8">
+                <div className="border-brutal bg-cream-mid w-full p-6 text-center shadow-brutal">
+                    <p className="font-mono-custom text-[11px] uppercase tracking-[2px] text-sienna font-bold mb-2">
+                        Something went wrong
+                    </p>
+                    <p className="font-mono-custom text-[11px] text-ink opacity-60">
+                        {error}
+                    </p>
+                    <button
+                        onClick={handleReset}
+                        className="mt-4 flex items-center gap-2 mx-auto font-mono-custom text-[10px] uppercase tracking-[1px] bg-cream border-brutal-2 px-4 py-2 shadow-brutal-sm shadow-brutal-hover"
+                    >
+                        <RotateCcw size={12} />
+                        Try Again
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    // ── EMPTY STATE ─────────────────────────────────────────
+    if (!response) {
+        return (
+            <div className="flex flex-col items-center justify-center h-full min-h-[400px] gap-3 p-8 border-[3px] border-dashed border-brown-light m-4">
+
+                <p className="font-mono-custom text-[10px] uppercase tracking-[2px] text-brown-mid opacity-50 text-center leading-relaxed">
+                    Your powerful prompt
+                    <br />
+                    will appear here.
+                    <br />
+                    <br />
+                    Fill your idea
+                    <br />
+                    Hit Generate.
+                </p>
+            </div>
+        );
+    }
+
+    // ── OUTPUT STATE ────────────────────────────────────────
+    return (
+        <div className="flex flex-col h-full">
+
+            {/* Scrollable content area */}
+            <div className="flex-1 overflow-y-auto scrollbar-thin max-h-[600px]">
+
+                {/* Meta tags */}
+                <div className="flex gap-2 flex-wrap p-4 pb-0">
+                    {[model, mode, tone].map((tag) => (
+                        <span
+                            key={tag}
+                            className="font-mono-custom text-[9px] uppercase tracking-[1px] bg-brown text-cream px-2 py-1 border-brutal-2"
+                        >
+                            {tag}
+                        </span>
+                    ))}
+                </div>
+
+                {/* Prompt box */}
+                <div className="m-4 border-brutal bg-brown shadow-brutal">
+                    <div className="px-4 pt-3 pb-1 border-b-2px border-brown-mid">
+                        <span className="font-mono-custom text-[9px] uppercase tracking-[2px] text-cream-dark opacity-50">
+              // Generated Prompt — Copy & Use
+                        </span>
+                    </div>
+                    <div className="p-4">
+                        <p className="font-mono-custom text-[12px] leading-relaxed text-cream whitespace-pre-wrap wrap-break-word">
+                            {response.prompt}
+                        </p>
+                    </div>
+                </div>
+
+                {/* Explain block */}
+                <div className="mx-4 mb-4">
+                    <ExplainBlock explanations={response.explanations} />
+                </div>
+
+            </div>
+
+            {/* Action buttons — always visible at bottom */}
+            <div className="grid grid-cols-3 border-t-[3px] border-brutal mx-0 mt-0 border-x-0 border-b-0">
+                <button
+                    onClick={handleCopy}
+                    className={`
+            flex items-center justify-center gap-2
+            py-3 border-r-[3px] border-ink
+            font-mono-custom text-[10px] uppercase tracking-[1px]
+            transition-all duration-100 cursor-pointer
+            ${copied
+                            ? "bg-green text-cream"
+                            : "bg-cream text-ink hover:bg-brown hover:text-cream"
+                        }
+          `}
+                >
+                    {copied ? <Check size={13} /> : <Copy size={13} />}
+                    {copied ? "Copied" : "Copy"}
+                </button>
+
+                <button
+                    onClick={handleSave}
+                    className={`
+            flex items-center justify-center gap-2
+            py-3 border-r-[3px] border-ink
+            font-mono-custom text-[10px] uppercase tracking-[1px]
+            transition-all duration-100 cursor-pointer
+            ${saved
+                            ? "bg-green text-cream"
+                            : "bg-cream text-ink hover:bg-brown hover:text-cream"
+                        }
+          `}
+                >
+                    <Save size={13} />
+                    {saved ? "Saved" : "Save"}
+                </button>
+
+                <button
+                    onClick={handleReset}
+                    className="
+            flex items-center justify-center gap-2
+            py-3
+            font-mono-custom text-[10px] uppercase tracking-[1px]
+            bg-cream text-ink
+            hover:bg-brown hover:text-cream
+            transition-all duration-100 cursor-pointer
+          "
+                >
+                    <RotateCcw size={13} />
+                    Reset
+                </button>
+            </div>
+        </div>
+    );
+}

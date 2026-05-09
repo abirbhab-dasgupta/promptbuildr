@@ -1,26 +1,222 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+    --font-display: "Bebas Neue", sans-serif;
+    --font-mono: "Space Mono", monospace;
+    --font-body: "DM Sans", sans-serif;
+
+    --color-cream: #faf3e0;
+    --color-cream-mid: #f5e6c8;
+    --color-cream-dark: #edd9a3;
+    --color-brown-pale: #e8d0b0;
+    --color-brown-light: #c49a6c;
+    --color-brown-mid: #8b5e3c;
+    --color-brown: #6b3a2a;
+    --color-sienna: #a0522d;
+    --color-sienna-warm: #c0622d;
+    --color-green: #4a7c59;
+    --color-ink: #2c1a0e;
+
+    --shadow-brutal: 5px 5px 0px #2c1a0e;
+    --shadow-brutal-lg: 8px 8px 0px #2c1a0e;
+    --shadow-brutal-sm: 2px 2px 0px #2c1a0e;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+@layer base {
+
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        background-color: var(--color-cream);
+        background-image:
+            repeating-linear-gradient(0deg,
+                transparent,
+                transparent 39px,
+                rgba(44, 26, 14, 0.05) 39px,
+                rgba(44, 26, 14, 0.05) 40px),
+            repeating-linear-gradient(90deg,
+                transparent,
+                transparent 39px,
+                rgba(44, 26, 14, 0.03) 39px,
+                rgba(44, 26, 14, 0.03) 40px);
+        color: var(--color-ink);
+        font-family: var(--font-body);
+        min-height: 100vh;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: var(--color-cream-mid);
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: var(--color-brown-mid);
+        border: 1px solid var(--color-ink);
+    }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+@layer utilities {
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+    /* ── FONTS ── */
+    .font-display {
+        font-family: var(--font-display);
+    }
+
+    .font-mono-custom {
+        font-family: var(--font-mono);
+    }
+
+    /* ── BORDERS ── */
+    .border-brutal {
+        border: 3px solid var(--color-ink);
+    }
+
+    .border-brutal-2 {
+        border: 2px solid var(--color-ink);
+    }
+
+    /* ── SHADOWS ── */
+    .shadow-brutal {
+        box-shadow: 5px 5px 0px var(--color-ink);
+    }
+
+    .shadow-brutal-lg {
+        box-shadow: 8px 8px 0px var(--color-ink);
+    }
+
+    .shadow-brutal-sm {
+        box-shadow: 2px 2px 0px var(--color-ink);
+    }
+
+    /* ── HOVER LIFT ── */
+    .brutal-hover {
+        transition: box-shadow 0.1s ease, transform 0.1s ease;
+    }
+
+    .brutal-hover:hover {
+        box-shadow: 2px 2px 0px var(--color-ink);
+        transform: translate(3px, 3px);
+    }
+
+    /* ── TEXT STROKE ── */
+    .text-stroke {
+        -webkit-text-stroke: 3px var(--color-ink);
+        color: transparent;
+    }
+
+    /* ── LOADER ── */
+    .loader-track {
+        position: relative;
+        width: 100%;
+        height: 6px;
+        background: var(--color-brown-pale);
+        border: 2px solid var(--color-ink);
+        overflow: hidden;
+    }
+
+    .loader-bar {
+        position: absolute;
+        left: -60%;
+        width: 60%;
+        height: 100%;
+        background: var(--color-brown);
+        animation: loading 1.2s ease-in-out infinite;
+    }
+
+    /* ── NOISE ── */
+    .noise::after {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+        pointer-events: none;
+        z-index: 9999;
+        opacity: 0.4;
+        will-change: auto;
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes loading {
+        from {
+            left: -60%;
+        }
+
+        to {
+            left: 110%;
+        }
+    }
+
+    @keyframes badgePop {
+        from {
+            transform: scale(0.5) rotate(-10deg);
+            opacity: 0;
+        }
+
+        to {
+            transform: scale(1) rotate(0deg);
+            opacity: 1;
+        }
+    }
+
+    @keyframes fadeSlideUp {
+        from {
+            transform: translateY(30px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    @keyframes toastIn {
+        from {
+            transform: translateX(-50%) translateY(80px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .badge-pop {
+        animation: badgePop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+    }
+
+    .animate-slide-up {
+        animation: fadeSlideUp 0.5s ease both;
+    }
+
+    .animate-slide-up-d1 {
+        animation: fadeSlideUp 0.5s ease both 0.08s;
+    }
+
+    .animate-slide-up-d2 {
+        animation: fadeSlideUp 0.5s ease both 0.16s;
+    }
+
+    .animate-slide-up-d3 {
+        animation: fadeSlideUp 0.5s ease both 0.24s;
+    }
+
+    .toast-in {
+        animation: toastIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
 }

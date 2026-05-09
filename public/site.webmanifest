@@ -1,0 +1,16 @@
+{
+    "name": "PromptBuildr",
+    "short_name": "PromptBuildr",
+    "description": "Forge your ideas into powerful AI prompts",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#faf3e0",
+    "theme_color": "#6b3a2a",
+    "icons": [
+        {
+            "src": "/favicon.ico",
+            "sizes": "any",
+            "type": "image/x-icon"
+        }
+    ]
+}
