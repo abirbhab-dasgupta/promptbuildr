@@ -17,10 +17,13 @@ export function saveToHistory(item: Omit<HistoryItem, "id" | "date">): HistoryIt
     const newItem: HistoryItem = {
         ...item,
         id: Date.now(),
-        date: new Date().toLocaleDateString("en-IN", {
+        date: new Date().toLocaleString("en-IN", {
             day: "numeric",
             month: "short",
             year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
         }),
     };
     const updated = [newItem, ...history].slice(0, MAX_ITEMS);

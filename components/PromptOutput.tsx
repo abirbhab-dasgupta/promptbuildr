@@ -131,56 +131,61 @@ export default function PromptOutput() {
 
             </div>
 
-            {/* Action buttons — always visible at bottom */}
-            <div className="grid grid-cols-3 border-t-[3px] border-brutal mx-0 mt-0 border-x-0 border-b-0">
-                <button
-                    onClick={handleCopy}
-                    className={`
-            flex items-center justify-center gap-2
-            py-3 border-r-[3px] border-ink
-            font-mono-custom text-[10px] uppercase tracking-[1px]
-            transition-all duration-100 cursor-pointer
-            ${copied
-                            ? "bg-green text-cream"
-                            : "bg-cream text-ink hover:bg-brown hover:text-cream"
-                        }
-          `}
-                >
-                    {copied ? <Check size={13} /> : <Copy size={13} />}
-                    {copied ? "Copied" : "Copy"}
-                </button>
+            {/* Action buttons — pinned at bottom, same zone as Forge button */}
+            <div className="mt-auto border-t-[3px] border-ink border-b-[3px] border-b-ink">
+                <div className="grid grid-cols-3">
+                    <button
+                        onClick={handleCopy}
+                        className={`
+              flex items-center justify-center gap-2
+              py-[21px] border-r-[3px] border-ink
+              font-mono-custom text-[10px] uppercase tracking-[1px]
+              transition-all duration-100 cursor-pointer
+              ${copied
+                                ? "bg-green text-cream"
+                                : "bg-cream text-ink hover:bg-brown hover:text-cream"
+                            }
+            `}
+                    >
+                        {copied ? <Check size={13} /> : <Copy size={13} />}
+                        {copied ? "Copied" : "Copy"}
+                    </button>
 
-                <button
-                    onClick={handleSave}
-                    className={`
-            flex items-center justify-center gap-2
-            py-3 border-r-[3px] border-ink
-            font-mono-custom text-[10px] uppercase tracking-[1px]
-            transition-all duration-100 cursor-pointer
-            ${saved
-                            ? "bg-green text-cream"
-                            : "bg-cream text-ink hover:bg-brown hover:text-cream"
-                        }
-          `}
-                >
-                    <Save size={13} />
-                    {saved ? "Saved" : "Save"}
-                </button>
+                    <button
+                        onClick={handleSave}
+                        className={`
+              flex items-center justify-center gap-2
+              py-[21px] border-r-[3px] border-ink
+              font-mono-custom text-[10px] uppercase tracking-[1px]
+              transition-all duration-100 cursor-pointer
+              ${saved
+                                ? "bg-green text-cream"
+                                : "bg-cream text-ink hover:bg-brown hover:text-cream"
+                            }
+            `}
+                    >
+                        <Save size={13} />
+                        {saved ? "Saved" : "Save"}
+                    </button>
 
-                <button
-                    onClick={handleReset}
-                    className="
-            flex items-center justify-center gap-2
-            py-3
-            font-mono-custom text-[10px] uppercase tracking-[1px]
-            bg-cream text-ink
-            hover:bg-brown hover:text-cream
-            transition-all duration-100 cursor-pointer
-          "
-                >
-                    <RotateCcw size={13} />
-                    Reset
-                </button>
+                    <button
+                        onClick={handleReset}
+                        className="
+              flex items-center justify-center gap-2
+              py-[21px]
+              font-mono-custom text-[10px] uppercase tracking-[1px]
+              bg-cream text-ink
+              hover:bg-brown hover:text-cream
+              transition-all duration-100 cursor-pointer
+            "
+                    >
+                        <RotateCcw size={13} />
+                        Reset
+                    </button>
+                </div>
+                <p className="text-center font-mono-custom text-[9px] uppercase tracking-[1px] text-brown-mid opacity-40 py-2">
+                    your prompt is never stored on our servers
+                </p>
             </div>
         </div>
     );

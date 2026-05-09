@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Hammer, Clock, Shield, ChevronDown } from "lucide-react";
+import { Hammer, Clock, Shield, ChevronDown, Mail } from "lucide-react";
 import { usePromptStore } from "@/store/usePromptStore";
 import ModeSelector from "@/components/ModeSelector";
 import ModelSelector from "@/components/ModelSelector";
@@ -150,34 +150,80 @@ export default function Home() {
 
       {/* ── HERO ── */}
       <section className="max-w-5xl mx-auto w-full px-5 pt-10 pb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
 
+          {/* Left — text */}
+          <div>
+            <div className="badge-pop inline-block bg-brown text-cream font-mono-custom text-[10px] uppercase tracking-[2px] px-3 py-1.5 border-brutal shadow-brutal-sm mb-4">
+              AI Prompt Builder
+            </div>
 
-        <h1 className="font-display text-[clamp(3rem,8vw,6rem)] leading-[0.95] tracking-[3px] uppercase animate-slide-up-d1">
-          Turn your
-          <span className="block text-sienna-warm">idea</span>
-          <span className="text-stroke block">into a</span>
-          <span className="block">killer prompt</span>
-        </h1>
+            <h1 className="font-display text-[clamp(3rem,8vw,6rem)] leading-[0.95] tracking-[3px] uppercase animate-slide-up-d1">
+              Turn your
+              <span className="block text-sienna-warm">idea</span>
+              <span className="text-stroke block">into a</span>
+              <span className="block">killer prompt</span>
+            </h1>
 
-        <p className="font-mono-custom text-[12px] leading-relaxed opacity-60 mt-4 max-w-md animate-slide-up-d2">
-          Paste a raw idea. Get a powerful, model-specific prompt.
-          No fluff. No logins. No data sent anywhere — ever.
-        </p>
+            <p className="font-mono-custom text-[12px] leading-relaxed opacity-60 mt-4 animate-slide-up-d2">
+              Paste a raw idea. Get a powerful, model-specific prompt.
+              No fluff. No logins. No data sent anywhere — ever.
+            </p>
 
-        <div className="animate-slide-up-d3 mt-4 inline-flex items-center gap-2 bg-brown-pale border-brutal shadow-brutal-sm px-4 py-2">
-          <Shield size={13} strokeWidth={2} className="text-brown" />
-          <span className="font-mono-custom text-[10px] uppercase tracking-[1px] text-ink">
-            100% local — your data lives only in your browser
-          </span>
+            <div className="animate-slide-up-d3 mt-4 inline-flex items-center gap-2 bg-brown-pale border-brutal shadow-brutal-sm px-4 py-2">
+              <Shield size={13} strokeWidth={2} className="text-brown" />
+              <span className="font-mono-custom text-[10px] uppercase tracking-[1px] text-ink">
+                100% local — your data lives only in your browser
+              </span>
+            </div>
+          </div>
+
+          {/* Right — stats/features card */}
+          <div className="hidden lg:flex flex-col gap-0 border-brutal shadow-brutal-lg animate-slide-up-d2">
+
+            {/* Card header */}
+            <div className="bg-brown px-5 py-3 border-b-[3px] border-ink">
+              <span className="font-display text-[16px] tracking-[2px] text-cream uppercase">
+                What PromptBuildr does
+              </span>
+            </div>
+
+            {/* Feature rows */}
+            {[
+              { num: "01", title: "Model-Specific", desc: "Optimized for ChatGPT, Claude, Gemini & Midjourney" },
+              { num: "02", title: "6 Prompt Modes", desc: "Code, Image, Writing, Agent, Study, General" },
+              { num: "03", title: "Explainability", desc: "Learn WHY each part of your prompt works" },
+              { num: "04", title: "100% Private", desc: "Zero server storage — localStorage only" },
+            ].map((f, i, arr) => (
+              <div
+                key={f.num}
+                className={`flex items-start gap-4 px-5 py-4 bg-cream hover:bg-cream-dark transition-colors duration-100 ${i < arr.length - 1 ? "border-b-[3px] border-ink" : ""}`}
+              >
+                <span className="font-display text-[28px] text-brown-pale leading-none select-none min-w-[36px]">
+                  {f.num}
+                </span>
+                <div>
+                  <p className="font-display text-[15px] tracking-[1.5px] uppercase text-brown">
+                    {f.title}
+                  </p>
+                  <p className="font-mono-custom text-[10px] leading-relaxed text-ink opacity-60 mt-0.5">
+                    {f.desc}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+
         </div>
       </section>
 
       {/* ── MAIN BUILDER GRID ── */}
       <section className="max-w-5xl mx-auto w-full px-5 pb-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 border-brutal shadow-brutal-lg lg:items-stretch">
+        <div className="grid grid-cols-1 lg:grid-cols-2 border-brutal shadow-brutal-lg lg:grid-rows-[1fr]">
 
           {/* LEFT — INPUT */}
           <div className="border-b-[3px] lg:border-b-0 lg:border-r-[3px] border-ink bg-cream flex flex-col">
+
             {/* Panel header */}
             <div className="flex items-center justify-between px-5 py-3 bg-brown border-b-[3px] border-ink">
               <h2 className="font-display text-[20px] tracking-[2px] text-cream uppercase">
@@ -188,27 +234,30 @@ export default function Home() {
               </span>
             </div>
 
-            <div className="p-5">
+            {/* Scrollable input area */}
+            <div className="flex-1 p-5 overflow-y-auto scrollbar-thin">
               <ModeSelector />
               <ModelSelector />
               <IdeaInput />
               <ToneSelector />
+            </div>
 
-              {/* Generate button */}
+            {/* Generate button — pinned at bottom of left panel */}
+            <div className="p-5 pt-0 border-t-[3px] border-ink mt-auto">
               <button
                 onClick={handleGenerate}
                 disabled={isLoading}
                 className={`
-                  relative w-full mt-5 py-4 overflow-hidden
-                  border-brutal shadow-brutal
-                  font-display text-[22px] tracking-[3px] uppercase
-                  transition-all duration-100 cursor-pointer
-                  group
-                  ${isLoading
+            relative w-full py-4 overflow-hidden
+            border-brutal shadow-brutal
+            font-display text-[22px] tracking-[3px] uppercase
+            transition-all duration-100 cursor-pointer
+            group
+            ${isLoading
                     ? "bg-brown-pale text-brown-mid cursor-not-allowed shadow-brutal"
                     : "bg-cream-dark text-brown hover:shadow-brutal-sm hover:translate-x-[3px] hover:translate-y-[3px]"
                   }
-                `}
+          `}
               >
                 <span className="relative z-10 flex items-center justify-center gap-2">
                   <Hammer
@@ -218,8 +267,6 @@ export default function Home() {
                   />
                   {isLoading ? "Forging..." : "Forge Prompt"}
                 </span>
-
-                {/* Hover fill */}
                 {!isLoading && (
                   <span className="absolute inset-0 bg-brown -translate-x-full group-hover:translate-x-0 transition-transform duration-200 z-0" />
                 )}
@@ -230,8 +277,6 @@ export default function Home() {
                   </span>
                 )}
               </button>
-
-              {/* Keyboard shortcut hint */}
               <p className="text-center font-mono-custom text-[9px] uppercase tracking-[1px] text-brown-mid opacity-40 mt-2">
                 or press Ctrl + Enter
               </p>
@@ -240,6 +285,7 @@ export default function Home() {
 
           {/* RIGHT — OUTPUT */}
           <div className="bg-cream flex flex-col">
+
             {/* Panel header */}
             <div className="flex items-center justify-between px-5 py-3 bg-sienna border-b-[3px] border-ink">
               <h2 className="font-display text-[20px] tracking-[2px] text-cream uppercase">
@@ -250,10 +296,15 @@ export default function Home() {
               </span>
             </div>
 
-            <PromptOutput />
+            {/* Output takes remaining height — buttons aligned with generate */}
+            <div className="flex-1 flex flex-col">
+              <PromptOutput />
+            </div>
+
           </div>
         </div>
       </section>
+
 
       {/* ── HOW IT WORKS ── */}
       <section className="max-w-5xl mx-auto w-full px-5 pb-12">
@@ -319,14 +370,64 @@ export default function Home() {
               Prompt<span className="text-cream-dark">Buildr</span>
             </span>
           </div>
-          <p className="font-mono-custom text-[9px] uppercase tracking-[1px] text-brown-light opacity-60 text-center">
-            Built for engineers, students & builders
-            <br />
-            All data stored locally — your browser, your rules.
+
+          {/* Made by */}
+          <p className="font-mono-custom text-[10px] uppercase tracking-[1px] text-brown-light text-center">
+            Made by{" "}
+            <a
+              href="https://abirbhabdasgupta.vercel.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-cream-dark border-b-1px border-cream-dark border-dashed hover:text-cream hover:border-cream transition-colors duration-100"
+            >
+              Abirbhab Dasgupta
+            </a>
           </p>
-          <p className="font-mono-custom text-[9px] uppercase tracking-[1px] text-brown-light opacity-40">
-            promptbuildr.io
-          </p>
+
+          {/* Social links */}
+          <div className="flex items-center gap-0 border-brutal-2">
+            <a
+              href="https://github.com/abirbhab-dasgupta"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3 py-2 border-r-2px border-ink bg-brown hover:bg-cream-dark hover:text-ink transition-colors duration-100 group"
+              title="GitHub"
+            >
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" className="text-cream group-hover:text-ink">
+                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
+              </svg>
+              <span className="font-mono-custom text-[9px] uppercase tracking-[1px] text-cream group-hover:text-ink">
+                GitHub
+              </span>
+            </a>
+
+            <a
+              href="https://linkedin.com/in/abirbhab"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3 py-2 border-r-2px border-ink bg-brown hover:bg-cream-dark hover:text-ink transition-colors duration-100 group"
+              title="LinkedIn"
+            >
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" className="text-cream group-hover:text-ink">
+                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+              </svg>
+              <span className="font-mono-custom text-[9px] uppercase tracking-[1px] text-cream group-hover:text-ink">
+                LinkedIn
+              </span>
+            </a>
+
+            <a
+              href="mailto:abirbhab00dasgupta@gmail.com"
+              className="flex items-center gap-1.5 px-3 py-2 bg-brown hover:bg-cream-dark hover:text-ink transition-colors duration-100 group"
+              title="Email"
+            >
+              <Mail size={13} strokeWidth={2} className="text-cream group-hover:text-ink" />
+              <span className="font-mono-custom text-[9px] uppercase tracking-[1px] text-cream group-hover:text-ink">
+                Mail
+              </span>
+            </a>
+          </div>
+
         </div>
       </footer>
 
