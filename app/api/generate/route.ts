@@ -18,29 +18,96 @@ const RequestSchema = z.object({
 // ── GEMINI CLIENT ─────────────────────────────────────────
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
+// ── STRIP THINKING BLOCKS ─────────────────────────────────
+// Gemini 2.5 Flash Lite is a thinking model and emits <think> or <thinking>
+// blocks before the actual JSON. Strip them first.
+function stripThinkingBlocks(raw: string): string {
+    return raw
+        .replace(/<think>[\s\S]*?<\/think>/gi, "")
+        .replace(/<thinking>[\s\S]*?<\/thinking>/gi, "")
+        .replace(/```json/gi, "")
+        .replace(/```/g, "")
+        .trim();
+}
+
+// ── EXTRACT JSON ──────────────────────────────────────────
+// Safely extract the outermost JSON object from a string.
+// Uses a brace-counting approach instead of a greedy regex so that
+// XML tags containing { } inside the prompt field don't confuse the match.
+function extractJSON(text: string): string | null {
+    const start = text.indexOf("{");
+    if (start === -1) return null;
+
+    let depth = 0;
+    let inString = false;
+    let escape = false;
+
+    for (let i = start; i < text.length; i++) {
+        const ch = text[i];
+
+        if (escape) {
+            escape = false;
+            continue;
+        }
+
+        if (ch === "\\" && inString) {
+            escape = true;
+            continue;
+        }
+
+        if (ch === '"') {
+            inString = !inString;
+            continue;
+        }
+
+        if (inString) continue;
+
+        if (ch === "{") depth++;
+        if (ch === "}") {
+            depth--;
+            if (depth === 0) {
+                return text.slice(start, i + 1);
+            }
+        }
+    }
+
+    return null;
+}
+
 // ── PARSE AI RESPONSE ─────────────────────────────────────
 function parseResponse(raw: string): {
     prompt: string;
     explanations: string[];
 } {
     try {
-        const clean = raw
-            .replace(/```json/g, "")
-            .replace(/```/g, "")
-            .trim();
-        const parsed = JSON.parse(clean);
+        const cleaned = stripThinkingBlocks(raw);
+        const jsonStr = extractJSON(cleaned);
 
-        if (!parsed.prompt || !Array.isArray(parsed.explanations)) {
+        if (!jsonStr) throw new Error("No JSON object found in response");
+
+        const parsed = JSON.parse(jsonStr);
+
+        if (
+            !parsed.prompt ||
+            typeof parsed.prompt !== "string" ||
+            parsed.prompt.trim() === "" ||
+            !Array.isArray(parsed.explanations) ||
+            parsed.explanations.length === 0
+        ) {
             throw new Error("Invalid response shape");
         }
 
         return {
-            prompt: parsed.prompt,
+            prompt: parsed.prompt.trim(),
             explanations: parsed.explanations.slice(0, 3),
         };
-    } catch {
+    } catch (e) {
+        console.error("[parseResponse] failed:", e);
+
+        // Fallback: return stripped raw text so the user sees something
+        const fallback = stripThinkingBlocks(raw);
         return {
-            prompt: raw,
+            prompt: fallback || "Failed to generate prompt. Please try again.",
             explanations: [
                 "A role was assigned to focus the AI on the right expertise.",
                 "Context was added to reduce ambiguity in the output.",
@@ -63,10 +130,7 @@ export async function POST(req: NextRequest) {
 
         if (!success) {
             return NextResponse.json(
-                {
-                    error:
-                        "Too many requests. Please wait a minute and try again.",
-                },
+                { error: "Too many requests. Please wait a minute and try again." },
                 {
                     status: 429,
                     headers: { "X-RateLimit-Remaining": String(remaining) },
@@ -87,7 +151,7 @@ export async function POST(req: NextRequest) {
 
         const { idea, mode, model, tone } = result.data;
 
-        // 3. Build model-specific system prompt
+        // 3. Build meta-prompt
         const systemPrompt = buildPrompt(idea, mode, model, tone);
 
         // 4. Call Gemini
@@ -107,46 +171,30 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json(parsed, {
             status: 200,
-            headers: {
-                "X-RateLimit-Remaining": String(remaining),
-            },
+            headers: { "X-RateLimit-Remaining": String(remaining) },
         });
     } catch (err: unknown) {
         console.error("[generate] error:", err);
 
-        // Gemini 429 — quota exceeded
         if (
             err instanceof Error &&
-            (err.message.includes("429") || err.message.toLowerCase().includes("quota"))
+            (err.message.includes("429") ||
+                err.message.toLowerCase().includes("quota"))
         ) {
             return NextResponse.json(
-                {
-                    error:
-                        "AI quota exceeded. Please wait a moment and try again.",
-                },
+                { error: "AI quota exceeded. Please wait a moment and try again." },
                 { status: 429 }
             );
         }
 
-        // Gemini 503 — model overloaded
-        if (
-            err instanceof Error &&
-            err.message.includes("503")
-        ) {
+        if (err instanceof Error && err.message.includes("503")) {
             return NextResponse.json(
-                {
-                    error:
-                        "AI model is currently overloaded. Please try again shortly.",
-                },
+                { error: "AI model is currently overloaded. Please try again shortly." },
                 { status: 503 }
             );
         }
 
-        // Gemini auth error
-        if (
-            err instanceof Error &&
-            err.message.includes("API key")
-        ) {
+        if (err instanceof Error && err.message.includes("API key")) {
             return NextResponse.json(
                 { error: "API configuration error. Please contact support." },
                 { status: 401 }

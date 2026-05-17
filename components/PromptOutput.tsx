@@ -6,6 +6,141 @@ import { usePromptStore } from "@/store/usePromptStore";
 import { useHistory } from "@/hooks/useHistory";
 import ExplainBlock from "./ExplainBlock";
 
+// ── PROMPT RENDERER ─────────────────────────────────────────────────────────
+// Parses the prompt string into labelled sections and renders them
+// as styled blocks matching the brutalist design system.
+
+type Section = {
+    label: string | null;
+    body: string;
+};
+
+// Known section labels across all model prompt formats
+const SECTION_LABELS = [
+    "Persona",
+    "Output Format",
+    "Task",
+    "Context",
+    "Constraints",
+    "Grounding",
+    "Role",
+    "Instructions",
+    "Format",
+    "Tone",
+    "Domain",
+    "Note",
+];
+
+function parsePrompt(raw: string): Section[] {
+    const lines = raw.split("\n");
+    const sections: Section[] = [];
+    let currentLabel: string | null = null;
+    let currentLines: string[] = [];
+
+    function flush() {
+        const body = currentLines.join("\n").trim();
+        if (body) sections.push({ label: currentLabel, body });
+        currentLines = [];
+    }
+
+    for (const line of lines) {
+        // Detect "Label: content" at start of a line
+        const match = line.match(
+            new RegExp(`^(${SECTION_LABELS.join("|")}):\\s*(.*)$`, "i")
+        );
+
+        if (match) {
+            flush();
+            currentLabel = match[1];
+            if (match[2].trim()) currentLines.push(match[2].trim());
+        } else {
+            currentLines.push(line);
+        }
+    }
+
+    flush();
+    return sections;
+}
+
+function PromptRenderer({ prompt }: { prompt: string }) {
+    const sections = parsePrompt(prompt);
+    const isStructured = sections.some((s) => s.label !== null);
+
+    // ── Unstructured (Midjourney / plain) — render as-is but styled ──
+    if (!isStructured) {
+        return (
+            <p className="font-mono-custom text-[12px] leading-relaxed text-cream whitespace-pre-wrap wrap-break-word">
+                {prompt}
+            </p>
+        );
+    }
+
+    // ── Structured (ChatGPT / Claude / Gemini) — render sections ──
+    return (
+        <div className="flex flex-col gap-3">
+            {sections.map((section, i) => {
+                if (!section.label) {
+                    // Opening command line (e.g. "Generate a...")
+                    return (
+                        <p
+                            key={i}
+                            className="font-mono-custom text-[13px] leading-relaxed text-cream font-bold whitespace-pre-wrap wrap-break-word"
+                        >
+                            {section.body}
+                        </p>
+                    );
+                }
+
+                // Numbered list detection inside a section body
+                const bodyLines = section.body.split("\n");
+                const hasNumberedItems = bodyLines.some((l) => /^\d+\./.test(l.trim()));
+
+                return (
+                    <div key={i} className="border-l-[3px] border-cream-dark pl-3">
+                        {/* Section label */}
+                        <span className="font-mono-custom text-[9px] uppercase tracking-[2px] text-cream opacity-40 block mb-1">
+                            {section.label}
+                        </span>
+
+                        {/* Section body */}
+                        {hasNumberedItems ? (
+                            <ol className="flex flex-col gap-1">
+                                {bodyLines.map((line, j) => {
+                                    const numMatch = line.trim().match(/^(\d+)\.\s+(.+)$/);
+                                    if (numMatch) {
+                                        return (
+                                            <li key={j} className="flex gap-2">
+                                                <span className="font-mono-custom text-[10px] text-cream opacity-40 shrink-0 w-4">
+                                                    {numMatch[1]}.
+                                                </span>
+                                                <span className="font-mono-custom text-[12px] leading-relaxed text-cream">
+                                                    {numMatch[2]}
+                                                </span>
+                                            </li>
+                                        );
+                                    }
+                                    return line.trim() ? (
+                                        <li key={j}>
+                                            <span className="font-mono-custom text-[12px] leading-relaxed text-cream">
+                                                {line}
+                                            </span>
+                                        </li>
+                                    ) : null;
+                                })}
+                            </ol>
+                        ) : (
+                            <p className="font-mono-custom text-[12px] leading-relaxed text-cream whitespace-pre-wrap wrap-break-word">
+                                {section.body}
+                            </p>
+                        )}
+                    </div>
+                );
+            })}
+        </div>
+    );
+}
+
+// ── MAIN COMPONENT ───────────────────────────────────────────────────────────
 export default function PromptOutput() {
     const { response, isLoading, error, mode, model, tone, idea, setResponse } =
         usePromptStore();
@@ -35,7 +170,7 @@ export default function PromptOutput() {
         setResponse(null);
     }
 
-    // ── LOADING STATE ───────────────────────────────────────
+    // ── LOADING STATE ──────────────────────────────────────────
     if (isLoading) {
         return (
             <div className="flex flex-col items-center justify-center h-full min-h-[400px] gap-4 p-8">
@@ -49,7 +184,7 @@ export default function PromptOutput() {
         );
     }
 
-    // ── ERROR STATE ─────────────────────────────────────────
+    // ── ERROR STATE ────────────────────────────────────────────
     if (error) {
         return (
             <div className="flex flex-col items-center justify-center h-full min-h-[400px] gap-4 p-8">
@@ -72,11 +207,10 @@ export default function PromptOutput() {
         );
     }
 
-    // ── EMPTY STATE ─────────────────────────────────────────
+    // ── EMPTY STATE ────────────────────────────────────────────
     if (!response) {
         return (
             <div className="flex flex-col items-center justify-center h-full min-h-[400px] gap-3 p-8 border-[3px] border-dashed border-brown-light m-4">
-
                 <p className="font-mono-custom text-[10px] uppercase tracking-[2px] text-brown-mid opacity-50 text-center leading-relaxed">
                     Your powerful prompt
                     <br />
@@ -91,13 +225,11 @@ export default function PromptOutput() {
         );
     }
 
-    // ── OUTPUT STATE ────────────────────────────────────────
+    // ── OUTPUT STATE ───────────────────────────────────────────
     return (
         <div className="flex flex-col h-full">
-
             {/* Scrollable content area */}
             <div className="flex-1 overflow-y-auto scrollbar-thin max-h-[600px]">
-
                 {/* Meta tags */}
                 <div className="flex gap-2 flex-wrap p-4 pb-0">
                     {[model, mode, tone].map((tag) => (
@@ -118,9 +250,7 @@ export default function PromptOutput() {
                         </span>
                     </div>
                     <div className="p-4">
-                        <p className="font-mono-custom text-[12px] leading-relaxed text-cream whitespace-pre-wrap wrap-break-word">
-                            {response.prompt}
-                        </p>
+                        <PromptRenderer prompt={response.prompt} />
                     </div>
                 </div>
 
@@ -128,10 +258,9 @@ export default function PromptOutput() {
                 <div className="mx-4 mb-4">
                     <ExplainBlock explanations={response.explanations} />
                 </div>
-
             </div>
 
-            {/* Action buttons — pinned at bottom, same zone as Forge button */}
+            {/* Action buttons */}
             <div className="mt-auto border-t-[3px] border-ink border-b-[3px] border-b-ink">
                 <div className="grid grid-cols-3">
                     <button
